@@ -18,7 +18,8 @@
       font-size: small;
     }
   </style>
-    <body bgcolor="#CCFFFF">	  
+
+  <body bgcolor="#CCFFFF">	  
      
     <center>
       <h1>ET Chat</h1>
@@ -27,23 +28,10 @@
       <tr>
       <input placeholder="say something" id="text" type="text">
       </tr>
-      <p>     
-      <td align="right"><b> 名前：</b></td>
-      <input placeholder = "please write your name" id = "name" type="text">
-      </p>
-       <p>
-      <button type="button" name="name" value="value">送信</button>
-     </p>
-      <p>
-      <button type="button" name="name" value="value">Sign in</button>
-     </p>
-      <p>
-      <button type="button" name="name" value="value">Sign up</button>
-     </p>
     </center>
 
     <script>
-      var url = "ws://" + window.location.host + "/chat/ws";
+      var url = "ws://" + window.location.host + "/ws";
       var ws = new WebSocket(url);
       var name = "ET"
       var chat = document.getElementById("chat");

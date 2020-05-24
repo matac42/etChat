@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"net/http"
 
@@ -9,21 +8,13 @@ import (
 	"gopkg.in/olahol/melody.v1"
 )
 
-func chatFunc(c *gin.Context) {
-	//chat processing
-	log.Println("Websocket App start.")
+type melodyHandler struct {
+	melo *melody.Melody
+}
 
-	router := gin.Default()
+func createMelodyHandler() melodyHandler {
+	mel := melodyHandler{}
 	m := melody.New()
-
-	rg := router.Group("/chat")
-	rg.GET("/", func(c *gin.Context) {
-		http.ServeFile(c.Writer, c.Request, "html/chat.html")
-	})
-
-	rg.GET("/ws", func(c *gin.Context) {
-		m.HandleRequest(c.Writer, c.Request)
-	})
 
 	m.HandleMessage(func(s *melody.Session, msg []byte) {
 		m.Broadcast(msg)
@@ -37,17 +28,28 @@ func chatFunc(c *gin.Context) {
 		log.Printf("websocket connection close. [session: %#v]\n", s)
 	})
 
-	// Listen and server on 0.0.0.0:8080
-	router.Run(":8080")
+	mel.melo = m
+	return mel
+}
 
-	fmt.Println("Websocket App End.")
+func chatFunc(c *gin.Context) {
+	http.ServeFile(c.Writer, c.Request, "html/chat.html")
+}
+
+func (e *melodyHandler) wsHandler(c *gin.Context) {
+	e.melo.HandleRequest(c.Writer, c.Request)
 }
 
 func main() {
-	r := gin.Default()
+	r := gin.Default() //ginは基本的にgin.Default()の返す構造体のメソッド経由でないと操作できない．
+	r.LoadHTMLGlob("html/*.html")
+
+	cmelody := createMelodyHandler()
+
 	v1 := r.Group("/")
 	{
-		v1.GET("/chat", chatFunc)
+		v1.GET("chat", chatFunc)
+		v1.GET("ws", cmelody.wsHandler)
 	}
 	r.Run(":8080")
 }
