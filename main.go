@@ -60,7 +60,7 @@ func redirectAuthrizeClient(c *gin.Context) {
 	c.Redirect(http.StatusMovedPermanently, authURL)
 }
 
-func getAccessTokenClient(c *gin.Context) *credentialInfo {
+func getAccessTokenClient(c *gin.Context) {
 	code := c.Request.URL.Query().Get("code")
 	state := c.Request.URL.Query().Get("state")
 	if state == "" {
@@ -94,7 +94,7 @@ func getAccessTokenClient(c *gin.Context) *credentialInfo {
 	json.Unmarshal(byteArray, &cre)
 
 	c.Redirect(http.StatusMovedPermanently, "/chat")
-	return cre
+
 }
 
 func main() {
@@ -109,6 +109,7 @@ func main() {
 		v1.GET("ws", cmelody.wsHandler)
 		v1.GET("login", logInHandler)
 		v1.GET("oauth", redirectAuthrizeClient)
+		v1.GET("callback", getAccessTokenClient)
 	}
 	r.Run(":8080")
 }
