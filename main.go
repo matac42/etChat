@@ -1,8 +1,13 @@
 package main
 
 import (
+	"encoding/json"
+	"fmt"
+	"io/ioutil"
 	"log"
 	"net/http"
+	"net/url"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"gopkg.in/olahol/melody.v1"
@@ -10,6 +15,12 @@ import (
 
 type melodyHandler struct {
 	melo *melody.Melody
+}
+
+type credentialInfo struct {
+	AccessToken string `json:"access_token"`
+	Scope       string `json:"scope"`
+	TokenType   string `json:"token_type"`
 }
 
 func createMelodyHandler() melodyHandler {
@@ -47,6 +58,43 @@ func logInHandler(c *gin.Context) {
 func redirectAuthrizeClient(c *gin.Context) {
 	authURL := "https://github.com/login/oauth/authorize?client_id=" + githubClientID
 	c.Redirect(http.StatusMovedPermanently, authURL)
+}
+
+func getAccessTokenClient(c *gin.Context) *credentialInfo {
+	code := c.Request.URL.Query().Get("code")
+	state := c.Request.URL.Query().Get("state")
+	if state == "" {
+		fmt.Println("state is empty")
+	}
+	values := url.Values{}
+	values.Add("code", code)
+	values.Add("client_id", githubClientID)
+	values.Add("client_secret", githubClientSecret)
+	req, err := http.NewRequest(
+		"POST",
+		"https://github.com/login/oauth/access_token",
+		strings.NewReader(values.Encode()),
+	)
+	if err != nil {
+		panic(err)
+	}
+
+	req.Header.Set("Accept", "application/json")
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		panic(err)
+	}
+	defer resp.Body.Close()
+
+	byteArray, _ := ioutil.ReadAll(resp.Body)
+
+	var cre *credentialInfo
+	json.Unmarshal(byteArray, &cre)
+
+	c.Redirect(http.StatusMovedPermanently, "/chat")
+	return cre
 }
 
 func main() {
