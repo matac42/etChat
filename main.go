@@ -27,6 +27,17 @@ type credentialInfo struct {
 	Scope       string `json:"scope"`
 	TokenType   string `json:"token_type"`
 }
+// type createJsonHandler struct{
+// 	J *credentialInfo
+// }
+
+// func createJson() *credentialInfo{
+// 	json :=  createJsonHandler{}
+
+
+// 	json.J = j
+
+// }
 
 func createMelodyHandler() melodyHandler {
 	mel := melodyHandler{}
@@ -48,6 +59,7 @@ func createMelodyHandler() melodyHandler {
 	return mel
 }
 
+
 func chatFunc(c *gin.Context) {
 	http.ServeFile(c.Writer, c.Request, "html/chat.html")
 }
@@ -55,6 +67,7 @@ func chatFunc(c *gin.Context) {
 func (e *melodyHandler) wsHandler(c *gin.Context) {
 	e.melo.HandleRequest(c.Writer, c.Request)
 }
+
 
 func logInHandler(c *gin.Context) {
 	http.ServeFile(c.Writer, c.Request, "html/login.html")
@@ -65,7 +78,7 @@ func redirectAuthrizeClient(c *gin.Context) {
 	c.Redirect(http.StatusMovedPermanently, authURL)
 }
 
-func getAccessTokenClient(c *gin.Context) {
+func getAccessTokenClient(c *gin.Context)  {
 	code := c.Request.URL.Query().Get("code")
 	state := c.Request.URL.Query().Get("state")
 	if state == "" {
@@ -96,13 +109,11 @@ func getAccessTokenClient(c *gin.Context) {
 	byteArray, _ := ioutil.ReadAll(resp.Body)
 
 	var cre *credentialInfo
+
 	json.Unmarshal(byteArray, &cre)
 
+	
 	c.Redirect(http.StatusMovedPermanently, "/chat")
-
-}
-
-func main() {
 
 	// db接続
     db, err := sqlConnect()
@@ -111,22 +122,25 @@ func main() {
     }
     defer db.Close()
 
-    error := db.Create(&Users{
-        Name:     "testtarou",
-        Age:      18,
-        Address:  "tokyo",
-        UpdateAt: getDate(),
-    }).Error
+    error := db.Create(cre).Error
     if error != nil {
         fmt.Println(error)
     } else {
         fmt.Println("データ追加成功")
     }	
+
+}
+
+func main() {
+
+
+	
 		
 	r := gin.Default() //ginは基本的にgin.Default()の返す構造体のメソッド経由でないと操作できない．
 	r.LoadHTMLGlob("html/*.html")
 
 	cmelody := createMelodyHandler()
+	// user := createJson()
 
 	v1 := r.Group("/")
 	{
@@ -137,6 +151,8 @@ func main() {
 		v1.GET("callback", getAccessTokenClient)
 	}
 	r.Run(":8080")
+
+	
 }
 
 
@@ -160,10 +176,10 @@ func sqlConnect() (database *gorm.DB, err error) {
     return gorm.Open(DBMS, CONNECT)
 }
 // Users ユーザー情報のテーブル情報
-type Users struct {
-    ID       int
-    Name     string `json:"name"`
-    Age      int    `json:"age"`
-    Address  string `json:"address"`
-    UpdateAt string `json:"updateAt" sql:"not null;type:date"`
-}
+// type Users struct {
+//     ID       int
+//     Name     string `json:"name"`
+//     Age      int    `json:"age"`
+//     Address  string `json:"address"`
+//     UpdateAt string `json:"updateAt" sql:"not null;type:date"`
+// }
