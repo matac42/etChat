@@ -40,6 +40,10 @@ func (e *melodyHandler) wsHandler(c *gin.Context) {
 	e.melo.HandleRequest(c.Writer, c.Request)
 }
 
+func logInHandler(c *gin.Context) {
+	http.ServeFile(c.Writer, c.Request, "html/login.html")
+}
+
 func main() {
 	r := gin.Default() //ginは基本的にgin.Default()の返す構造体のメソッド経由でないと操作できない．
 	r.LoadHTMLGlob("html/*.html")
@@ -50,6 +54,7 @@ func main() {
 	{
 		v1.GET("chat", chatFunc)
 		v1.GET("ws", cmelody.wsHandler)
+		v1.GET("login", logInHandler)
 	}
 	r.Run(":8080")
 }
