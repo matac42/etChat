@@ -44,6 +44,11 @@ func logInHandler(c *gin.Context) {
 	http.ServeFile(c.Writer, c.Request, "html/login.html")
 }
 
+func redirectAuthrizeClient(c *gin.Context) {
+	authURL := "https://github.com/login/oauth/authorize?client_id=" + githubClientID
+	c.Redirect(http.StatusMovedPermanently, authURL)
+}
+
 func main() {
 	r := gin.Default() //ginは基本的にgin.Default()の返す構造体のメソッド経由でないと操作できない．
 	r.LoadHTMLGlob("html/*.html")
@@ -55,6 +60,7 @@ func main() {
 		v1.GET("chat", chatFunc)
 		v1.GET("ws", cmelody.wsHandler)
 		v1.GET("login", logInHandler)
+		v1.GET("oauth", redirectAuthrizeClient)
 	}
 	r.Run(":8080")
 }
