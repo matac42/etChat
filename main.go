@@ -104,6 +104,8 @@ func getAccessTokenClient(c *gin.Context) {
 	}
 	defer db.Close()
 
+	db.AutoMigrate(&credentialInfo{})
+
 	error := db.Create(&cre).Error
 	if error != nil {
 		fmt.Println(error)
