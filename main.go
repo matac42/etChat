@@ -53,7 +53,7 @@ func createMelodyHandler() melodyHandler {
 	return mel
 }
 
-func (cre *credentialInfo) chatFunc(c *gin.Context) {
+func (cre *credentialInfo) chat(c *gin.Context) {
 	db, err := sqlConnect()
 	if err != nil {
 		panic(err.Error())
@@ -69,11 +69,11 @@ func (cre *credentialInfo) chatFunc(c *gin.Context) {
 	}
 }
 
-func (e *melodyHandler) wsHandler(c *gin.Context) {
+func (e *melodyHandler) melodyClient(c *gin.Context) {
 	e.melo.HandleRequest(c.Writer, c.Request)
 }
 
-func logInHandler(c *gin.Context) {
+func logInClient(c *gin.Context) {
 	http.ServeFile(c.Writer, c.Request, "html/login.html")
 }
 
@@ -138,18 +138,18 @@ func (cre *credentialInfo) getAccessTokenClient(c *gin.Context) {
 }
 
 func sqlConnect() (database *gorm.DB, err error) {
-	DBMS := "mysql"
-	USER := "jb5"
-	PASS := "h19life"
-	PROTOCOL := "tcp(localhost:3306)"
-	DBNAME := "et"
+	DBMS := dbms
+	USER := user
+	PASS := pass
+	PROTOCOL := protocol
+	DBNAME := dbname
 
 	CONNECT := USER + ":" + PASS + "@" + PROTOCOL + "/" + DBNAME + "?charset=utf8&parseTime=true&loc=Asia%2FTokyo"
 	return gorm.Open(DBMS, CONNECT)
 }
 
 func main() {
-	r := gin.Default() //ginは基本的にgin.Default()の返す構造体のメソッド経由でないと操作できない．
+	r := gin.Default()
 	r.LoadHTMLGlob("html/*.html")
 
 	cmelody := createMelodyHandler()
@@ -157,9 +157,9 @@ func main() {
 
 	v1 := r.Group("/")
 	{
-		v1.GET("chat", user.chatFunc)
-		v1.GET("ws", cmelody.wsHandler)
-		v1.GET("login", logInHandler)
+		v1.GET("chat", user.chat)
+		v1.GET("ws", cmelody.melodyClient)
+		v1.GET("login", logInClient)
 		v1.GET("oauth", redirectAuthrizeClient)
 		v1.GET("callback", user.getAccessTokenClient)
 	}
