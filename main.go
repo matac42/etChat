@@ -65,11 +65,14 @@ func redirectAuthrizeClient(c *gin.Context) {
 }
 
 func getAccessTokenClient(c *gin.Context) {
+	// first, get the authentication code.
 	code := c.Request.URL.Query().Get("code")
 	state := c.Request.URL.Query().Get("state")
 	if state == "" {
 		fmt.Println("state is empty")
 	}
+
+	// second, get the access token using authentication code.
 	values := url.Values{}
 	values.Add("code", code)
 	values.Add("client_id", githubClientID)
@@ -97,7 +100,7 @@ func getAccessTokenClient(c *gin.Context) {
 	var cre *credentialInfo
 	json.Unmarshal(byteArray, &cre)
 
-	// db接続
+	// third, create db table if it was not exist
 	db, err := sqlConnect()
 	if err != nil {
 		panic(err.Error())
@@ -106,17 +109,17 @@ func getAccessTokenClient(c *gin.Context) {
 
 	db.AutoMigrate(&credentialInfo{})
 
+	// finally, save the access token in the table.
 	error := db.Create(&cre).Error
 	if error != nil {
 		fmt.Println(error)
 	} else {
-		fmt.Println("データ追加成功")
+		fmt.Println("success addition access token to db!!!")
 	}
 
 	c.Redirect(http.StatusMovedPermanently, "/chat")
 }
 
-// SQLConnect DB接続
 func sqlConnect() (database *gorm.DB, err error) {
 	DBMS := "mysql"
 	USER := "jb5"
