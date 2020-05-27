@@ -117,7 +117,7 @@ func (cre *credentialInfo) getAccessTokenClient(c *gin.Context) {
 
 	json.Unmarshal(byteArray, &cre)
 
-	// third, create db table if it was not exist
+	// third, create db table if it was not exist.
 	db, err := sqlConnect()
 	if err != nil {
 		panic(err.Error())
@@ -126,12 +126,16 @@ func (cre *credentialInfo) getAccessTokenClient(c *gin.Context) {
 
 	db.AutoMigrate(&credentialInfo{})
 
-	// finally, save the access token in the table.
-	error := db.Create(&cre).Error
-	if error != nil {
-		fmt.Println(error)
-	} else {
-		fmt.Println("success addition access token to db!!!")
+	// finally, save the access token in the table if it was not exist.
+	find := db.Where("access_token = ?", cre.AccessToken).Find(&cre).RecordNotFound()
+
+	if find {
+		error := db.Create(&cre).Error
+		if error != nil {
+			fmt.Println(error)
+		} else {
+			fmt.Println("success addition access token to db!!!")
+		}
 	}
 
 	c.Redirect(http.StatusMovedPermanently, "/chat")
