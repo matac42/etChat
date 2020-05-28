@@ -27,6 +27,12 @@ type credentialInfo struct {
 	TokenType   string `json:"token_type"`
 }
 
+func createCredentialInfo() *credentialInfo {
+	cre := credentialInfo{}
+
+	return &cre
+}
+
 func createMelodyHandler() melodyHandler {
 	mel := melodyHandler{}
 	m := melody.New()
@@ -47,15 +53,27 @@ func createMelodyHandler() melodyHandler {
 	return mel
 }
 
-func chatFunc(c *gin.Context) {
-	http.ServeFile(c.Writer, c.Request, "html/chat.html")
+func (cre *credentialInfo) chat(c *gin.Context) {
+	db, err := sqlConnect()
+	if err != nil {
+		panic(err.Error())
+	}
+	defer db.Close()
+
+	find := db.Where("access_token = ?", cre.AccessToken).Find(&cre).RecordNotFound()
+
+	if find {
+		c.Redirect(http.StatusMovedPermanently, "/login")
+	} else {
+		http.ServeFile(c.Writer, c.Request, "html/chat.html")
+	}
 }
 
-func (e *melodyHandler) wsHandler(c *gin.Context) {
+func (e *melodyHandler) melodyClient(c *gin.Context) {
 	e.melo.HandleRequest(c.Writer, c.Request)
 }
 
-func logInHandler(c *gin.Context) {
+func logInClient(c *gin.Context) {
 	http.ServeFile(c.Writer, c.Request, "html/login.html")
 }
 
@@ -64,7 +82,7 @@ func redirectAuthrizeClient(c *gin.Context) {
 	c.Redirect(http.StatusMovedPermanently, authURL)
 }
 
-func getAccessTokenClient(c *gin.Context) {
+func (cre *credentialInfo) getAccessTokenClient(c *gin.Context) {
 	// first, get the authentication code.
 	code := c.Request.URL.Query().Get("code")
 	state := c.Request.URL.Query().Get("state")
@@ -97,10 +115,9 @@ func getAccessTokenClient(c *gin.Context) {
 
 	byteArray, _ := ioutil.ReadAll(resp.Body)
 
-	var cre *credentialInfo
 	json.Unmarshal(byteArray, &cre)
 
-	// third, create db table if it was not exist
+	// third, create db table if it was not exist.
 	db, err := sqlConnect()
 	if err != nil {
 		panic(err.Error())
@@ -109,41 +126,46 @@ func getAccessTokenClient(c *gin.Context) {
 
 	db.AutoMigrate(&credentialInfo{})
 
-	// finally, save the access token in the table.
-	error := db.Create(&cre).Error
-	if error != nil {
-		fmt.Println(error)
-	} else {
-		fmt.Println("success addition access token to db!!!")
+	// finally, save the access token in the table if it was not exist.
+	find := db.Where("access_token = ?", cre.AccessToken).Find(&cre).RecordNotFound()
+
+	if find {
+		error := db.Create(&cre).Error
+		if error != nil {
+			fmt.Println(error)
+		} else {
+			fmt.Println("success addition access token to db!!!")
+		}
 	}
 
 	c.Redirect(http.StatusMovedPermanently, "/chat")
 }
 
 func sqlConnect() (database *gorm.DB, err error) {
-	DBMS := "mysql"
-	USER := "jb5"
-	PASS := "h19life"
-	PROTOCOL := "tcp(localhost:3306)"
-	DBNAME := "et"
+	DBMS := dbms
+	USER := user
+	PASS := pass
+	PROTOCOL := protocol
+	DBNAME := dbname
 
 	CONNECT := USER + ":" + PASS + "@" + PROTOCOL + "/" + DBNAME + "?charset=utf8&parseTime=true&loc=Asia%2FTokyo"
 	return gorm.Open(DBMS, CONNECT)
 }
 
 func main() {
-	r := gin.Default() //ginは基本的にgin.Default()の返す構造体のメソッド経由でないと操作できない．
+	r := gin.Default()
 	r.LoadHTMLGlob("html/*.html")
 
 	cmelody := createMelodyHandler()
+	user := createCredentialInfo()
 
 	v1 := r.Group("/")
 	{
-		v1.GET("chat", chatFunc)
-		v1.GET("ws", cmelody.wsHandler)
-		v1.GET("login", logInHandler)
+		v1.GET("chat", user.chat)
+		v1.GET("ws", cmelody.melodyClient)
+		v1.GET("login", logInClient)
 		v1.GET("oauth", redirectAuthrizeClient)
-		v1.GET("callback", getAccessTokenClient)
+		v1.GET("callback", user.getAccessTokenClient)
 	}
 	r.Run(":8080")
 }
