@@ -60,9 +60,10 @@ func (cre *credentialInfo) chat(c *gin.Context) {
 	}
 	defer db.Close()
 
-	find := db.Where("access_token = ?", cre.AccessToken).Find(&cre).RecordNotFound()
+	creEX := credentialInfo{}
+	find := db.First(&creEX, "accesstoken=?", cre.AccessToken)
 
-	if find {
+	if find.RecordNotFound() {
 		c.Redirect(http.StatusMovedPermanently, "/login")
 	} else {
 		http.ServeFile(c.Writer, c.Request, "html/chat.html")
@@ -127,9 +128,10 @@ func (cre *credentialInfo) getAccessTokenClient(c *gin.Context) {
 	db.AutoMigrate(&credentialInfo{})
 
 	// finally, save the access token in the table if it was not exist.
-	find := db.Where("access_token = ?", cre.AccessToken).Find(&cre).RecordNotFound()
+	creEX := credentialInfo{}
+	find := db.First(&creEX, "accesstoken=?", cre.AccessToken)
 
-	if find {
+	if find.RecordNotFound() {
 		error := db.Create(&cre).Error
 		if error != nil {
 			fmt.Println(error)
