@@ -95,13 +95,12 @@ func GetCredentialInfo(c *gin.Context) *CredentialInfo {
 	return &cre
 }
 
-func GetGithubUserData(c *CredentialInfo) {
+func (c *CredentialInfo) GetGithubUserData() {
 
-	values := url.Values{}
 	req, err := http.NewRequest(
 		"POST",
 		"https://api.github.com/user",
-		strings.NewReader(values.Encode()),
+		nil,
 	)
 	if err != nil {
 		panic(err)
@@ -125,7 +124,7 @@ func GetGithubUserData(c *CredentialInfo) {
 func GetAccessTokenClient(c *gin.Context) {
 	cre := GetCredentialInfo(c)
 
-	GetGithubUserData(cre)
+	cre.GetGithubUserData()
 
 	db, err := database.SQLConnect()
 	if err != nil {
