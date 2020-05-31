@@ -97,7 +97,7 @@ func GetAccessTokenClient(c *gin.Context) {
 
 	db.AutoMigrate(creEX)
 
-	find := db.First(&creEX, "name=?", cre.Name)
+	find := db.First(&creEX, "name=?", cre.Login)
 
 	if find.RecordNotFound() {
 		error := db.Create(&cre).Error

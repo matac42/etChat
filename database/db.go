@@ -13,7 +13,7 @@ import (
 // CredentialInfo implements a oauth2 access token etc...
 type CredentialInfo struct {
 	gorm.Model
-	Name        string `json:"login"`
+	Login       string `json:"login"`
 	AccessToken string `json:"access_token"`
 	Scope       string `json:"scope"`
 	TokenType   string `json:"token_type"`
