@@ -14,23 +14,6 @@ type MelodyHandler struct {
 	melo *melody.Melody
 }
 
-// ChatClient fires fn when a /chat connection.
-func ChatClient(c *gin.Context) {
-	cre := oauth.GetCredentialInfo(c)
-
-	// セッションの存在で判断するように書き直す．
-	if oauth.NameNotFound(cre.Name) {
-		c.Redirect(http.StatusMovedPermanently, "/login")
-	} else {
-		http.ServeFile(c.Writer, c.Request, "html/chat.html")
-	}
-}
-
-// MelodyClient fires fn when a /ws connects.
-func (e *MelodyHandler) MelodyClient(c *gin.Context) {
-	e.melo.HandleRequest(c.Writer, c.Request)
-}
-
 // CreateMelodyHandler establishes a websocket connection.
 func CreateMelodyHandler() MelodyHandler {
 	mel := MelodyHandler{}
@@ -50,4 +33,21 @@ func CreateMelodyHandler() MelodyHandler {
 
 	mel.melo = m
 	return mel
+}
+
+// ChatClient fires fn when a /chat connection.
+func ChatClient(c *gin.Context) {
+	cre := oauth.GetCredentialInfo(c)
+
+	// セッションの存在で判断するように書き直す．
+	if oauth.NameNotFound(cre.Name) {
+		c.Redirect(http.StatusMovedPermanently, "/login")
+	} else {
+		http.ServeFile(c.Writer, c.Request, "html/chat.html")
+	}
+}
+
+// MelodyClient fires fn when a /ws connects.
+func (e *MelodyHandler) MelodyClient(c *gin.Context) {
+	e.melo.HandleRequest(c.Writer, c.Request)
 }

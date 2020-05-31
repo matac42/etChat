@@ -10,24 +10,8 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
-	_ "github.com/go-sql-driver/mysql"
 	"github.com/matac42/etChat/database"
 )
-
-// CredentialInfo implements a oauth2 access token etc...
-type CredentialInfo struct {
-	ID          int
-	Name        string `json:"login"`
-	AccessToken string `json:"access_token"`
-	Scope       string `json:"scope"`
-	TokenType   string `json:"token_type"`
-}
-
-// CreateCredentialInfo create an instance of CredentialInfo.
-func CreateCredentialInfo() *CredentialInfo {
-	cre := CredentialInfo{}
-	return &cre
-}
 
 // RedirectAuthenticateClient fires fn when a /oauth connection.
 func RedirectAuthenticateClient(c *gin.Context) {
@@ -40,7 +24,7 @@ func LogInClient(c *gin.Context) {
 	http.ServeFile(c.Writer, c.Request, "html/login.html")
 }
 
-// AccessTokenNotFound checks if an access token exists in the db.
+// NameNotFound checks if an name exists in the db.
 func NameNotFound(t string) bool {
 	//SQLConnectはこの関数外でやって受け取る形が良い
 	db, err := database.SQLConnect()
@@ -49,14 +33,16 @@ func NameNotFound(t string) bool {
 	}
 	defer db.Close()
 
-	creEX := CredentialInfo{}
+	creEX := database.CredentialInfo{}
 	find := db.First(&creEX, "name=?", t).RecordNotFound()
 
 	return find
 }
 
 // GetCredentialInfo gets a CredentialInfo from token end point.
-func GetCredentialInfo(c *gin.Context) *CredentialInfo {
+func GetCredentialInfo(c *gin.Context) *database.CredentialInfo {
+	// この関数でかい
+
 	// first, get the authentication code.
 	code := c.Request.URL.Query().Get("code")
 	state := c.Request.URL.Query().Get("state")
@@ -89,35 +75,10 @@ func GetCredentialInfo(c *gin.Context) *CredentialInfo {
 
 	byteArray, _ := ioutil.ReadAll(resp.Body)
 
-	cre := CredentialInfo{}
+	cre := database.CredentialInfo{}
 	json.Unmarshal(byteArray, &cre)
 
 	return &cre
-}
-
-func (c *CredentialInfo) GetGithubUserData() {
-
-	req, err := http.NewRequest(
-		"POST",
-		"https://api.github.com/user",
-		nil,
-	)
-	if err != nil {
-		panic(err)
-	}
-
-	req.Header.Set("Authorization", "token "+c.AccessToken)
-
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		panic(err)
-	}
-	defer resp.Body.Close()
-
-	byteArray, _ := ioutil.ReadAll(resp.Body)
-
-	json.Unmarshal(byteArray, &c)
 }
 
 // GetAccessTokenClient deal with callback.
@@ -132,7 +93,7 @@ func GetAccessTokenClient(c *gin.Context) {
 	}
 	defer db.Close()
 
-	creEX := CredentialInfo{}
+	creEX := database.CredentialInfo{}
 
 	db.AutoMigrate(creEX)
 
