@@ -40,7 +40,7 @@ func ChatClient(c *gin.Context) {
 	cre := oauth.GetCredentialInfo(c)
 
 	// セッションの存在で判断するように書き直す．
-	if oauth.NameNotFound(cre.Name) {
+	if oauth.NameNotFound(cre.Login) {
 		c.Redirect(http.StatusMovedPermanently, "/login")
 	} else {
 		http.ServeFile(c.Writer, c.Request, "html/chat.html")
