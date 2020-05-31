@@ -95,33 +95,6 @@ func GetCredentialInfo(c *gin.Context) *CredentialInfo {
 	return &cre
 }
 
-// GetAccessTokenClient deal with callback.
-func GetAccessTokenClient(c *gin.Context) {
-	cre := GetCredentialInfo(c)
-
-	GetGithubUserData(cre)
-
-	db, err := database.SQLConnect()
-	if err != nil {
-		panic(err.Error())
-	}
-	defer db.Close()
-
-	creEX := CredentialInfo{}
-	find := db.First(&creEX, "name=?", cre.Name)
-
-	if find.RecordNotFound() {
-		error := db.Create(&cre).Error
-		if error != nil {
-			fmt.Println(error)
-		} else {
-			fmt.Println("success addition access token to db!!!")
-		}
-	}
-
-	c.Redirect(http.StatusMovedPermanently, "/chat")
-}
-
 func GetGithubUserData(c *CredentialInfo) {
 
 	values := url.Values{}
@@ -146,4 +119,34 @@ func GetGithubUserData(c *CredentialInfo) {
 	byteArray, _ := ioutil.ReadAll(resp.Body)
 
 	json.Unmarshal(byteArray, &c)
+}
+
+// GetAccessTokenClient deal with callback.
+func GetAccessTokenClient(c *gin.Context) {
+	cre := GetCredentialInfo(c)
+
+	GetGithubUserData(cre)
+
+	db, err := database.SQLConnect()
+	if err != nil {
+		panic(err.Error())
+	}
+	defer db.Close()
+
+	creEX := CredentialInfo{}
+
+	db.AutoMigrate(creEX)
+
+	find := db.First(&creEX, "name=?", cre.Name)
+
+	if find.RecordNotFound() {
+		error := db.Create(&cre).Error
+		if error != nil {
+			fmt.Println(error)
+		} else {
+			fmt.Println("success addition access token to db!!!")
+		}
+	}
+
+	c.Redirect(http.StatusMovedPermanently, "/chat")
 }
