@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"os"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -20,12 +21,6 @@ type CredentialInfo struct {
 	TokenType   string `json:"token_type"`
 }
 
-// あとで治そう
-const (
-	GithubClientID     = "A"
-	GithubClientSecret = "B"
-)
-
 // CreateCredentialInfo create an instance of CredentialInfo.
 func CreateCredentialInfo() *CredentialInfo {
 	cre := CredentialInfo{}
@@ -34,7 +29,7 @@ func CreateCredentialInfo() *CredentialInfo {
 
 // RedirectAuthenticateClient fires fn when a /oauth connection.
 func RedirectAuthenticateClient(c *gin.Context) {
-	authURL := "https://github.com/login/oauth/authorize?client_id=" + GithubClientID
+	authURL := "https://github.com/login/oauth/authorize?client_id=" + os.Getenv("GithubClientID")
 	c.Redirect(http.StatusMovedPermanently, authURL)
 }
 
@@ -69,8 +64,8 @@ func GetCredentialInfo(c *gin.Context) *CredentialInfo {
 	// second, get the access token using authentication code.
 	values := url.Values{}
 	values.Add("code", code)
-	values.Add("client_id", GithubClientID)
-	values.Add("client_secret", GithubClientSecret)
+	values.Add("client_id", os.Getenv("GithubClientID"))
+	values.Add("client_secret", os.Getenv("GithubClientSecret"))
 	req, err := http.NewRequest(
 		"POST",
 		"https://github.com/login/oauth/access_token",
