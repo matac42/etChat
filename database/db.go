@@ -7,6 +7,9 @@ import (
 	"github.com/jinzhu/gorm"
 )
 
+// こっち側からoauthパッケージを参照しないような作りにしないといけない．
+// そうでないと，import cycle が発生してしまう．
+
 // SQLConnect establishes a mysql connection.
 func SQLConnect() (database *gorm.DB, err error) {
 	DBMS := os.Getenv("DBMS")

@@ -18,7 +18,8 @@ type MelodyHandler struct {
 func ChatClient(c *gin.Context) {
 	cre := oauth.GetCredentialInfo(c)
 
-	if oauth.AccessTokenNotFound(cre.AccessToken) {
+	// セッションの存在で判断するように書き直す．
+	if oauth.NameNotFound(cre.Name) {
 		c.Redirect(http.StatusMovedPermanently, "/login")
 	} else {
 		http.ServeFile(c.Writer, c.Request, "html/chat.html")

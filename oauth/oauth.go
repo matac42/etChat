@@ -17,6 +17,7 @@ import (
 // CredentialInfo implements a oauth2 access token etc...
 type CredentialInfo struct {
 	ID          int
+	Name        string `json:"login"`
 	AccessToken string `json:"access_token"`
 	Scope       string `json:"scope"`
 	TokenType   string `json:"token_type"`
@@ -40,7 +41,8 @@ func LogInClient(c *gin.Context) {
 }
 
 // AccessTokenNotFound checks if an access token exists in the db.
-func AccessTokenNotFound(t string) bool {
+func NameNotFound(t string) bool {
+	//SQLConnectはこの関数外でやって受け取る形が良い
 	db, err := database.SQLConnect()
 	if err != nil {
 		panic(err.Error())
@@ -48,7 +50,7 @@ func AccessTokenNotFound(t string) bool {
 	defer db.Close()
 
 	creEX := CredentialInfo{}
-	find := db.First(&creEX, "access_token=?", t).RecordNotFound()
+	find := db.First(&creEX, "name=?", t).RecordNotFound()
 
 	return find
 }
@@ -97,16 +99,16 @@ func GetCredentialInfo(c *gin.Context) *CredentialInfo {
 func GetAccessTokenClient(c *gin.Context) {
 	cre := GetCredentialInfo(c)
 
+	GetGithubUserData(cre)
+
 	db, err := database.SQLConnect()
 	if err != nil {
 		panic(err.Error())
 	}
 	defer db.Close()
 
-	db.AutoMigrate(&CredentialInfo{})
-
 	creEX := CredentialInfo{}
-	find := db.First(&creEX, "access_token=?", cre.AccessToken)
+	find := db.First(&creEX, "name=?", cre.Name)
 
 	if find.RecordNotFound() {
 		error := db.Create(&cre).Error
@@ -118,4 +120,31 @@ func GetAccessTokenClient(c *gin.Context) {
 	}
 
 	c.Redirect(http.StatusMovedPermanently, "/chat")
+}
+
+func GetGithubUserData(c *CredentialInfo) {
+
+	values := url.Values{}
+	values.Add("access_token", c.AccessToken)
+	req, err := http.NewRequest(
+		"POST",
+		"https://api.github.com/user",
+		strings.NewReader(values.Encode()),
+	)
+	if err != nil {
+		panic(err)
+	}
+
+	req.Header.Set("Accept", "application/json")
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		panic(err)
+	}
+	defer resp.Body.Close()
+
+	byteArray, _ := ioutil.ReadAll(resp.Body)
+
+	json.Unmarshal(byteArray, &c)
 }
