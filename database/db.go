@@ -49,7 +49,7 @@ func (c *CredentialInfo) GetGithubUserData() {
 		panic(err)
 	}
 
-	req.Header.Set("Authorization", "token "+c.AccessToken)
+	req.Header.Add("Authorization", "token "+c.AccessToken)
 
 	client := &http.Client{}
 	resp, err := client.Do(req)
