@@ -125,7 +125,6 @@ func GetAccessTokenClient(c *gin.Context) {
 func GetGithubUserData(c *CredentialInfo) {
 
 	values := url.Values{}
-	values.Add("access_token", c.AccessToken)
 	req, err := http.NewRequest(
 		"POST",
 		"https://api.github.com/user",
@@ -135,7 +134,7 @@ func GetGithubUserData(c *CredentialInfo) {
 		panic(err)
 	}
 
-	req.Header.Set("Accept", "application/json")
+	req.Header.Set("Authorization", "token "+c.AccessToken)
 
 	client := &http.Client{}
 	resp, err := client.Do(req)
