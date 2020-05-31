@@ -2,7 +2,7 @@ package router
 
 import (
 	"github.com/gin-gonic/gin"
-	chatapp "github.com/matac42/etChat/chat"
+	"github.com/matac42/etChat/chatapp"
 	"github.com/matac42/etChat/oauth"
 )
 
