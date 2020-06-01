@@ -41,7 +41,7 @@ func SQLConnect() (database *gorm.DB, err error) {
 func (c *CredentialInfo) GetGithubUserData() {
 
 	req, err := http.NewRequest(
-		"POST",
+		"GET",
 		"https://api.github.com/user",
 		nil,
 	)
