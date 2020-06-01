@@ -41,7 +41,7 @@ func NameNotFound(t string) bool {
 
 // GetCredentialInfo gets a CredentialInfo from token end point.
 func GetCredentialInfo(c *gin.Context) *database.CredentialInfo {
-	// この関数でかい
+	// この関数でかい.
 
 	// first, get the authentication code.
 	code := c.Request.URL.Query().Get("code")

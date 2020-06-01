@@ -50,7 +50,7 @@ func (c *CredentialInfo) GetGithubUserData() {
 	}
 
 	req.Header.Set("Accept", "application/json")
-	req.Header.Add("Authorization", "bearer "+c.AccessToken)
+	req.Header.Set("Authorization", "bearer "+c.AccessToken)
 
 	client := &http.Client{}
 	resp, err := client.Do(req)
