@@ -34,7 +34,7 @@ func NameNotFound(t string) bool {
 	defer db.Close()
 
 	creEX := database.CredentialInfo{}
-	find := db.First(&creEX, "name=?", t).RecordNotFound()
+	find := db.First(&creEX, "login=?", t).RecordNotFound()
 
 	return find
 }
@@ -97,7 +97,7 @@ func GetAccessTokenClient(c *gin.Context) {
 
 	db.AutoMigrate(creEX)
 
-	find := db.First(&creEX, "name=?", cre.Login)
+	find := db.First(&creEX, "login=?", cre.Login)
 
 	if find.RecordNotFound() {
 		error := db.Create(&cre).Error
